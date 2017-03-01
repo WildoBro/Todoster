@@ -2,7 +2,7 @@
   <header class="header">
     <h1>todo</h1>
     <form id="new-form">
-      <input type="text" class="new-todo"  />
+      <input type="text" class="new-todo" />
     </form>
   </header>
 
@@ -18,9 +18,15 @@
     $('#new-form').submit(function(event) {
       event.preventDefault();
       var textbox = $('.new-todo');
-      console.log("Task: ", textbox.val());
+      var payload = {
+        task: {
+          title: textbox.val()
+        }
+      };
+      $.post("/tasks", payload).success(function(data) {
+        console.log("Successful HTTP Request");
+      });
     });
-
 
 
     // The taskHtml method takes in a JavaScript representation
@@ -35,13 +41,13 @@
          task.title +
          '</label></div></li>';
 
-        return liElement
+      return liElement;
     }
 
-    // toggleTask takes in an HTML representation of
+    // toggleTask takes in an HTML representation of the
     // an event that fires from an HTML representation of
-    // the toggle checkbox and performs an API request to toggle
-    // the value of the 'done' field
+    // the toggle checkbox and  performs an API request to toggle
+    // the value of the `done` field
     function toggleTask(e) {
       var itemId = $(e.target).data("id");
 
@@ -58,13 +64,14 @@
     $.get("/tasks").success( function( data ) {
       var htmlString = "";
 
-      $.each(data, function(index, task) {
+      $.each(data, function(index,  task) {
         htmlString += taskHtml(task);
       });
       var ulTodos = $('.todo-list');
       ulTodos.html(htmlString);
 
       $('.toggle').change(toggleTask);
+
     });
   });
 </script>
