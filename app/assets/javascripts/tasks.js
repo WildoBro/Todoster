@@ -11,7 +11,6 @@ $(function() {
       var htmlString = taskHtml(data);
       var ulTodos = $('.todo-list');
       ulTodos.append(htmlString);
-      $('.toggle').click(toggleTask);
       $('.new-todo').val('');
     });
   }
@@ -23,13 +22,12 @@ $(function() {
   function taskHtml(task) {
     var checkedStatus = task.done ? "checked" : "";
     var liClass = task.done ? "completed" : ""; 
-    var liElement = '<li id="listItem-' + task.id + '" class="' + liClass + '">' + 
+    var liElement = '<li data-id="' + task.id + '" id="listItem-' + task.id + '" class="' + liClass + '">' + 
     '<div class="view"><input class="toggle" type="checkbox"' +
-      " data-id='" + task.id + "'" +
       checkedStatus +
       '><label>' +
        task.title +
-       '</label></div></li>';
+       '<button class="js-delete" type="button" style="float: right;">&times;</button></label></div></li>';
 
     return liElement;
   }
@@ -39,22 +37,36 @@ $(function() {
   // the toggle checkbox and  performs an API request to toggle
   // the value of the `done` field
   function toggleTask(e) {
-    var itemId = $(e.target).data("id");
+    var itemId = $(e.target).closest("li").data("id");
 
     var doneValue = Boolean($(e.target).is(':checked'));
 
-    $.post("/tasks/" + itemId, {
-      _method: "PUT",
-      task: {
+    $.ajax({
+      url: "/tasks/" + itemId,
+      method: "PUT",
+      data: {task: {
         done: doneValue
-      }
+      }}
     }).success(function(data) {
       var liHtml = taskHtml(data);
       var $li = $("#listItem-" + data.id);
       $li.replaceWith(liHtml);
-      $('.toggle').change(toggleTask);
     });
   }
+
+
+  function deleteTask(e) {
+    var itemId = $(e.target).closest("li").data("id");
+
+    $.ajax({
+      url: "/tasks/" + itemId,
+      method: "DELETE"
+    }).success(function(data) {
+      var $li = $("#listItem-" + data.id);
+      $li.remove();
+    });
+  }
+
 
   $.get("/tasks").success( function( data ) {
     var htmlString = "";
@@ -78,9 +90,9 @@ $(function() {
     var ulTodos = $('.todo-list');
     ulTodos.html(htmlString);
 
-    $('.toggle').change(toggleTask);
   });
 
-  $('#new-form').submit(handleSubmit);
-
+  $('#new-form').on("submit", handleSubmit);
+  $(document).on("change", '.toggle', toggleTask);
+  $(document).on("click", '.js-delete', deleteTask);
 });
